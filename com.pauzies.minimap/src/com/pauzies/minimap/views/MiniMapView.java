@@ -37,282 +37,282 @@ import com.pauzies.minimap.preferences.Preferences;
 
 public class MiniMapView extends ViewPart {
 
-	public static final String ID = "com.pauzies.minimap.views.MiniMapView";
+    public static final String ID = "com.pauzies.minimap.views.MiniMapView";
 
-	private Color backgroundColor;
-	private Color foregroundColor;
-	private Color selectionBackgroundColor;
-	private Color selectionForegroundColor;
-	private Color visibleRegionColor = new Color (Display.getCurrent(), 127, 127, 255);
+    private Color backgroundColor;
+    private Color foregroundColor;
+    private Color selectionBackgroundColor;
+    private Color selectionForegroundColor;
+    private Color visibleRegionColor = new Color (Display.getCurrent(), 127, 127, 255);
 
-	private AbstractTextEditor selectedPart;
-	private MyTextEditor editor;
-	private boolean mouseIsDown;
-	private StyledText minimap;
-	
-	private float scale = 0.5f;
+    private AbstractTextEditor selectedPart;
+    private MyTextEditor editor;
+    private boolean mouseIsDown;
+    private StyledText minimap;
 
-	class MyTextEditor {
-		private final AbstractTextEditor editor;
+    private float scale = 0.5f;
 
-		public MyTextEditor(AbstractTextEditor editor) {
-		  System.out.println("MyTextEditor");
-			this.editor = editor;
-		}
+    class MyTextEditor {
+        private final AbstractTextEditor editor;
 
-		public ISourceViewer getSourceViewer() {
-			try {
-				Method m = AbstractTextEditor.class.getDeclaredMethod("getSourceViewer");
-				m.setAccessible(true);
-				return (ISourceViewer) m.invoke(editor);
-			} catch (Exception e) {
-				e.printStackTrace();
-			} 
-			return null;
-		}
-	}
+        public MyTextEditor(AbstractTextEditor editor) {
+            System.out.println("MyTextEditor");
+            this.editor = editor;
+        }
 
-	// listeners ////////////////////////////////////////////////////////////////
-	private final MouseListener minimapMouseListener = new MouseAdapter() {
-		@Override
-		public void mouseDown(MouseEvent e) {
-//			System.out.println("mouseDown");
-			changeEditor(e);
-			mouseIsDown = true;
-		}
+        public ISourceViewer getSourceViewer() {
+            try {
+                Method m = AbstractTextEditor.class.getDeclaredMethod("getSourceViewer");
+                m.setAccessible(true);
+                return (ISourceViewer) m.invoke(editor);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
 
-		@Override
-		public void mouseUp(MouseEvent e) {
-//			System.out.println("mouseUp");
-			changeEditor(e);
-			mouseIsDown = false;
-		}
-	};
+    // listeners ////////////////////////////////////////////////////////////////
+    private final MouseListener minimapMouseListener = new MouseAdapter() {
+        @Override
+        public void mouseDown(MouseEvent e) {
+            //			System.out.println("mouseDown");
+            changeEditor(e);
+            mouseIsDown = true;
+        }
 
-	private final MouseMoveListener minimapMouseMoveListener = new MouseMoveListener() {
-		@Override
-		public void mouseMove(MouseEvent e) {
-//		System.out.println("mouseMove");
-			if (mouseIsDown) {
-				changeEditor(e);
-			}
-		}
-	};
+        @Override
+        public void mouseUp(MouseEvent e) {
+            //			System.out.println("mouseUp");
+            changeEditor(e);
+            mouseIsDown = false;
+        }
+    };
 
-	private final MouseWheelListener minimapMouseWheelListener = new MouseWheelListener() {
-		@Override
-		public void mouseScrolled(MouseEvent e) {
-			System.out.println("mouseScrolled");
-			// NOTE : this is not working, I assume it supposed to scroll the window minimap
-			editor.getSourceViewer().getTextWidget().setTopIndex(editor.getSourceViewer().getTextWidget().getTopIndex() + (e.count * -1));
-		}
-	};
+    private final MouseMoveListener minimapMouseMoveListener = new MouseMoveListener() {
+        @Override
+        public void mouseMove(MouseEvent e) {
+            //		System.out.println("mouseMove");
+            if (mouseIsDown) {
+                changeEditor(e);
+            }
+        }
+    };
 
-	private final SelectionListener minimapSelectionListener = new SelectionAdapter() {
-		@Override
-		public void widgetSelected(SelectionEvent event) {
-			System.out.println("widgetSelected");
-			int offset = minimap.getCaretOffset();
-			if (offset == event.x) {
-				// right to left select
-				minimap.setSelection(event.x, event.x);
-			} else {
-				// left to right select
-				minimap.setSelection(event.y, event.y);
-			}
-		}
-	};
+    private final MouseWheelListener minimapMouseWheelListener = new MouseWheelListener() {
+        @Override
+        public void mouseScrolled(MouseEvent e) {
+            System.out.println("mouseScrolled");
+            // NOTE : this is not working, I assume it supposed to scroll the window minimap
+            editor.getSourceViewer().getTextWidget().setTopIndex(editor.getSourceViewer().getTextWidget().getTopIndex() + (e.count * -1));
+        }
+    };
 
-	private final ControlListener editorControlListener = new ControlListener() {
-		@Override
-		public void controlResized(ControlEvent e) {
-			System.out.println("controlResized");
-			highlightVisibleRegion(minimap, editor);
-		}
+    private final SelectionListener minimapSelectionListener = new SelectionAdapter() {
+        @Override
+        public void widgetSelected(SelectionEvent event) {
+            System.out.println("widgetSelected");
+            int offset = minimap.getCaretOffset();
+            if (offset == event.x) {
+                // right to left select
+                minimap.setSelection(event.x, event.x);
+            } else {
+                // left to right select
+                minimap.setSelection(event.y, event.y);
+            }
+        }
+    };
 
-		@Override
-		public void controlMoved(ControlEvent e) {
-			System.out.println("controlMoved");
-		}
-	};
+    private final ControlListener editorControlListener = new ControlListener() {
+        @Override
+        public void controlResized(ControlEvent e) {
+            System.out.println("controlResized");
+            highlightVisibleRegion(minimap, editor);
+        }
 
-	private final ISelectionListener editorSelectionListener = new ISelectionListener() {
-		@Override
-		public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		  System.out.println("selectionChanged -> " + part.getTitle());
-			if (part == selectedPart) {
-				return;
-			}
-			if (!(part instanceof AbstractTextEditor)) {
-				return;
-			}
-			if (editor != null) {
-				editor.getSourceViewer().getTextWidget().removeControlListener(editorControlListener);
-				editor.getSourceViewer().getTextWidget().removeBidiSegmentListener(editorSegmentListener);
-			}
+        @Override
+        public void controlMoved(ControlEvent e) {
+            System.out.println("controlMoved");
+        }
+    };
 
-			selectedPart = (AbstractTextEditor) part;
-			editor = new MyTextEditor((AbstractTextEditor) part);
+    private final ISelectionListener editorSelectionListener = new ISelectionListener() {
+        @Override
+        public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+            System.out.println("selectionChanged -> " + part.getTitle());
+            if (part == selectedPart) {
+                return;
+            }
+            if (!(part instanceof AbstractTextEditor)) {
+                return;
+            }
+            if (editor != null) {
+                editor.getSourceViewer().getTextWidget().removeControlListener(editorControlListener);
+                editor.getSourceViewer().getTextWidget().removeBidiSegmentListener(editorSegmentListener);
+            }
 
-			setMinimapFont();
-			
-			fillMiniMap(minimap, editor);
+            selectedPart = (AbstractTextEditor) part;
+            editor = new MyTextEditor((AbstractTextEditor) part);
 
-			editor.getSourceViewer().getTextWidget().addControlListener(editorControlListener);
-			editor.getSourceViewer().getTextWidget().addBidiSegmentListener(editorSegmentListener);
+            setMinimapFont();
 
-			foregroundColor = editor.getSourceViewer().getTextWidget().getForeground();
-			backgroundColor = editor.getSourceViewer().getTextWidget().getBackground();
-			selectionBackgroundColor = editor.getSourceViewer().getTextWidget().getSelectionBackground();
-			selectionForegroundColor = editor.getSourceViewer().getTextWidget().getSelectionForeground();
-      if (null != Preferences.getVisibleRegionHighlightColor()) { visibleRegionColor = Preferences.getVisibleRegionHighlightColor(); }
+            fillMiniMap(minimap, editor);
 
-			minimap.setBackground(backgroundColor);
-			minimap.setForeground(foregroundColor);
-			minimap.setSelectionBackground(selectionBackgroundColor);
-			minimap.setSelectionForeground(selectionForegroundColor);
-			highlightVisibleRegion(minimap, editor);
-		}
-	};
+            editor.getSourceViewer().getTextWidget().addControlListener(editorControlListener);
+            editor.getSourceViewer().getTextWidget().addBidiSegmentListener(editorSegmentListener);
 
-	private final BidiSegmentListener editorSegmentListener = new BidiSegmentListener() {
-		@Override
-		public void lineGetSegments(BidiSegmentEvent event) {
-			System.out.println("lineGetSegments");
-			highlightVisibleRegion(minimap, editor);
-		}
-	};
-	
-//	IPropertyChangeListener preferenceListener = new IPropertyChangeListener() {
-////			/*
-////			 * @see IPropertyChangeListener.propertyChange()
-////			 */
-////			public void propertyChange(PropertyChangeEvent event) {
-////
-////				if (event
-////					.getProperty()
-////					.equals(BadWordCheckerPlugin.HIGHLIGHT_PREFERENCE)) {
-////					//Update the colors by clearing the current color,
-////					//updating the view and then disposing the old color.
-////					Color oldForeground = foreground;
-////					foreground = null;
-////					setBadWordHighlights(text.getText());
-////					oldForeground.dispose();
-////				}
-////				if (event
-////					.getProperty()
-////					.equals(BadWordCheckerPlugin.BAD_WORDS_PREFERENCE))
-////					//Only update the text if only the words have changed
-////					setBadWordHighlights(text.getText());
-////			}
-//
-//			@Override
-//      public void propertyChange(PropertyChangeEvent event) {
-//				System.out.println("propertyChange");
-//	      // TODO Auto-generated method stub
-//				if (event.getProperty().equals(Preferences.VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE)) {
-//					
-//					System.out.println("VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE changed");
-//					
-//					//Update the colors by clearing the current color,
-//					//updating the view and then disposing the old color.
-////					Color oldForeground = foreground;
-////					foreground = null;
-////					setBadWordHighlights(text.getText());
-////					oldForeground.dispose();
-//					
-////					event.getNewValue()
-//					
-////					visibleRegionColor = ??;
-//					// probably redraw
-//				}
-//      }
-//		};
+            foregroundColor = editor.getSourceViewer().getTextWidget().getForeground();
+            backgroundColor = editor.getSourceViewer().getTextWidget().getBackground();
+            selectionBackgroundColor = editor.getSourceViewer().getTextWidget().getSelectionBackground();
+            selectionForegroundColor = editor.getSourceViewer().getTextWidget().getSelectionForeground();
+            if (null != Preferences.getVisibleRegionHighlightColor()) { visibleRegionColor = Preferences.getVisibleRegionHighlightColor(); }
 
-	// WorkbenchPart overrides //////////////////////////////////////////////////
-	@Override
-	public void createPartControl(Composite parent) {
-	  System.out.println("createPartControl");
+            minimap.setBackground(backgroundColor);
+            minimap.setForeground(foregroundColor);
+            minimap.setSelectionBackground(selectionBackgroundColor);
+            minimap.setSelectionForeground(selectionForegroundColor);
+            highlightVisibleRegion(minimap, editor);
+        }
+    };
 
-		minimap = new StyledText(parent, SWT.NONE);
-		minimap.setEditable(false);
-		// minimap.setEnabled(true);
-		// minimap.setCursor(null);
-		minimap.setCaret(null);
+    private final BidiSegmentListener editorSegmentListener = new BidiSegmentListener() {
+        @Override
+        public void lineGetSegments(BidiSegmentEvent event) {
+            System.out.println("lineGetSegments");
+            highlightVisibleRegion(minimap, editor);
+        }
+    };
 
-		minimap.addMouseListener(minimapMouseListener);
-		minimap.addMouseMoveListener(minimapMouseMoveListener);
-		minimap.addMouseWheelListener(minimapMouseWheelListener);
-		// Disable Selection
-		minimap.addSelectionListener(minimapSelectionListener);
+    //	IPropertyChangeListener preferenceListener = new IPropertyChangeListener() {
+    ////			/*
+    ////			 * @see IPropertyChangeListener.propertyChange()
+    ////			 */
+    ////			public void propertyChange(PropertyChangeEvent event) {
+    ////
+    ////				if (event
+    ////					.getProperty()
+    ////					.equals(BadWordCheckerPlugin.HIGHLIGHT_PREFERENCE)) {
+    ////					//Update the colors by clearing the current color,
+    ////					//updating the view and then disposing the old color.
+    ////					Color oldForeground = foreground;
+    ////					foreground = null;
+    ////					setBadWordHighlights(text.getText());
+    ////					oldForeground.dispose();
+    ////				}
+    ////				if (event
+    ////					.getProperty()
+    ////					.equals(BadWordCheckerPlugin.BAD_WORDS_PREFERENCE))
+    ////					//Only update the text if only the words have changed
+    ////					setBadWordHighlights(text.getText());
+    ////			}
+    //
+    //			@Override
+    //      public void propertyChange(PropertyChangeEvent event) {
+    //				System.out.println("propertyChange");
+    //	      // TODO Auto-generated method stub
+    //				if (event.getProperty().equals(Preferences.VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE)) {
+    //
+    //					System.out.println("VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE changed");
+    //
+    //					//Update the colors by clearing the current color,
+    //					//updating the view and then disposing the old color.
+    ////					Color oldForeground = foreground;
+    ////					foreground = null;
+    ////					setBadWordHighlights(text.getText());
+    ////					oldForeground.dispose();
+    //
+    ////					event.getNewValue()
+    //
+    ////					visibleRegionColor = ??;
+    //					// probably redraw
+    //				}
+    //      }
+    //		};
 
-		getSite().getWorkbenchWindow().getSelectionService().addSelectionListener(editorSelectionListener);
-		
-//		Preferences.getDefault().getPreferenceStore().addPropertyChangeListener(preferenceListener);
-	}
+    // WorkbenchPart overrides //////////////////////////////////////////////////
+    @Override
+    public void createPartControl(Composite parent) {
+        System.out.println("createPartControl");
 
-	@Override
-	public void setFocus() {
-		System.out.println("setFocus");
-	}
+        minimap = new StyledText(parent, SWT.NONE);
+        minimap.setEditable(false);
+        // minimap.setEnabled(true);
+        // minimap.setCursor(null);
+        minimap.setCaret(null);
 
-	@Override
-	public void dispose() {
-		super.dispose();
-		System.out.println("dispose");
-		editor.getSourceViewer().getTextWidget().removeControlListener(editorControlListener);
-		editor.getSourceViewer().getTextWidget().removeBidiSegmentListener(editorSegmentListener);
-		getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(editorSelectionListener);
-	}
-	
-	// private functions ////////////////////////////////////////////////////////
-	private static void fillMiniMap(StyledText minimap, MyTextEditor editor) {
-	  System.out.println("fillMiniMap");
-		StyledText text = editor.getSourceViewer().getTextWidget();
-		minimap.setContent(text.getContent());
-		minimap.setStyleRanges(editor.getSourceViewer().getTextWidget().getStyleRanges());
-	}
+        minimap.addMouseListener(minimapMouseListener);
+        minimap.addMouseMoveListener(minimapMouseMoveListener);
+        minimap.addMouseWheelListener(minimapMouseWheelListener);
+        // Disable Selection
+        minimap.addSelectionListener(minimapSelectionListener);
 
-	// NOTE : this works EXCEPT when code is folded because the minimap matches the contents (foldedness) but uses the line numbers visible to hihglight
-	private void highlightVisibleRegion(StyledText minimap, MyTextEditor editor) {
-		System.out.print("highlightVisibleRegion ");
-		int startLine = editor.getSourceViewer().getTopIndex();
-    int endLine = editor.getSourceViewer().getBottomIndex();
-    // reset background color for whole document
-		minimap.setLineBackground(0, minimap.getLineCount() - 1, backgroundColor);
-		// set visible area colour
-		minimap.setLineBackground(startLine, endLine - startLine + 1, visibleRegionColor);
-		System.out.println("from line# " + startLine + " to line# " + endLine);
-	}
+        getSite().getWorkbenchWindow().getSelectionService().addSelectionListener(editorSelectionListener);
 
-	private void changeEditor(MouseEvent e) {
-		System.out.println("changeEditor");
-		StyledText text = (StyledText) e.getSource();
-		int line = text.getLineAtOffset(text.getCaretOffset());
-		// editor.getSourceViewer().getTextWidget().setCaretOffset(text.getCaretOffset());
-//		editor.getSourceViewer().getTextWidget().setTopIndex(line);
-	}
-	
-	private void setMinimapFont() {
-		System.out.println("setMinimapFont");
-		// create font for minimap that matches original and set to scale
-		Font origFont = JFaceResources.getFont(JFaceResources.TEXT_FONT);
-		FontData[] fontData = origFont.getFontData();
-		int origFontSize = 0;
-		for (int i = 0; i < fontData.length; i++) {
-			System.out.println("fontdata " + i);
-			origFontSize = fontData[i].getHeight();
-			fontData[i].setHeight((int) (origFontSize * scale));
-		}
+        //		Preferences.getDefault().getPreferenceStore().addPropertyChangeListener(preferenceListener);
+    }
 
-		final Font miniFont = new Font(Display.getCurrent(), fontData);
-		minimap.setFont(miniFont);
+    @Override
+    public void setFocus() {
+        System.out.println("setFocus");
+    }
 
-		// dispose font
-		minimap.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				miniFont.dispose();
-			}
-		});
-	}
+    @Override
+    public void dispose() {
+        super.dispose();
+        System.out.println("dispose");
+        editor.getSourceViewer().getTextWidget().removeControlListener(editorControlListener);
+        editor.getSourceViewer().getTextWidget().removeBidiSegmentListener(editorSegmentListener);
+        getSite().getWorkbenchWindow().getSelectionService().removeSelectionListener(editorSelectionListener);
+    }
+
+    // private functions ////////////////////////////////////////////////////////
+    private static void fillMiniMap(StyledText minimap, MyTextEditor editor) {
+        System.out.println("fillMiniMap");
+        StyledText text = editor.getSourceViewer().getTextWidget();
+        minimap.setContent(text.getContent());
+        minimap.setStyleRanges(editor.getSourceViewer().getTextWidget().getStyleRanges());
+    }
+
+    // NOTE : this works EXCEPT when code is folded because the minimap matches the contents (foldedness) but uses the line numbers visible to hihglight
+    private void highlightVisibleRegion(StyledText minimap, MyTextEditor editor) {
+        System.out.print("highlightVisibleRegion ");
+        int startLine = editor.getSourceViewer().getTopIndex();
+        int endLine = editor.getSourceViewer().getBottomIndex();
+        // reset background color for whole document
+        minimap.setLineBackground(0, minimap.getLineCount() - 1, backgroundColor);
+        // set visible area colour
+        minimap.setLineBackground(startLine, endLine - startLine + 1, visibleRegionColor);
+        System.out.println("from line# " + startLine + " to line# " + endLine);
+    }
+
+    private void changeEditor(MouseEvent e) {
+        System.out.println("changeEditor");
+        StyledText text = (StyledText) e.getSource();
+        int line = text.getLineAtOffset(text.getCaretOffset());
+        // editor.getSourceViewer().getTextWidget().setCaretOffset(text.getCaretOffset());
+        //		editor.getSourceViewer().getTextWidget().setTopIndex(line);
+    }
+
+    private void setMinimapFont() {
+        System.out.println("setMinimapFont");
+        // create font for minimap that matches original and set to scale
+        Font origFont = JFaceResources.getFont(JFaceResources.TEXT_FONT);
+        FontData[] fontData = origFont.getFontData();
+        int origFontSize = 0;
+        for (int i = 0; i < fontData.length; i++) {
+            System.out.println("fontdata " + i);
+            origFontSize = fontData[i].getHeight();
+            fontData[i].setHeight((int) (origFontSize * scale));
+        }
+
+        final Font miniFont = new Font(Display.getCurrent(), fontData);
+        minimap.setFont(miniFont);
+
+        // dispose font
+        minimap.addDisposeListener(new DisposeListener() {
+            public void widgetDisposed(DisposeEvent e) {
+                miniFont.dispose();
+            }
+        });
+    }
 }

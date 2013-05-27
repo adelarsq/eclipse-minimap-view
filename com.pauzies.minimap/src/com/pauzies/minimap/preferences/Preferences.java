@@ -15,89 +15,89 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 //public class Preferences extends AbstractUIPlugin {
-public class Preferences 
-  extends PreferencePage
-	implements IWorkbenchPreferencePage {
-	private static Preferences	plugin;
-	private ColorFieldEditor	 colorEditor;
-	public static final int	   DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR	    = SWT.COLOR_BLUE;
-	public static final String	VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE	= "visible_region_highlight_color";
+public class Preferences extends PreferencePage implements IWorkbenchPreferencePage {
 
-	@Override
-  public void init(IWorkbench workbench) {
-		System.out.println("init");
-		setPreferenceStore(Preferences.getDefault().getPreferenceStore());
-  }
+    private static Preferences	plugin;
+    private ColorFieldEditor	 colorEditor;
+    public static final int	   DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR	    = SWT.COLOR_BLUE;
+    public static final String	VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE	= "visible_region_highlight_color";
 
-	@Override
-  protected Control createContents(Composite parent) {
-		System.out.println("createContents");
-		Composite entryTable = new Composite(parent, SWT.NULL);
+    @Override
+    public void init(IWorkbench workbench) {
+        System.out.println("init");
+        setPreferenceStore(Preferences.getDefault().getPreferenceStore());
+    }
 
-		// Create a data that takes up the extra space in the dialog .
-		GridData data = new GridData(GridData.FILL_HORIZONTAL);
-		data.grabExcessHorizontalSpace = true;
-		entryTable.setLayoutData(data);
+    @Override
+    protected Control createContents(Composite parent) {
+        System.out.println("createContents");
+        Composite entryTable = new Composite(parent, SWT.NULL);
 
-		GridLayout layout = new GridLayout();
-		entryTable.setLayout(layout);
-		
-		Composite colorComposite = new Composite(entryTable,SWT.NONE);
+        // Create a data that takes up the extra space in the dialog .
+        GridData data = new GridData(GridData.FILL_HORIZONTAL);
+        data.grabExcessHorizontalSpace = true;
+        entryTable.setLayoutData(data);
 
-		colorComposite.setLayout(new GridLayout());
-		
-		// Create a data that takes up the extra space in the dialog.
-		colorComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        GridLayout layout = new GridLayout();
+        entryTable.setLayout(layout);
 
-		colorEditor = new ColorFieldEditor(VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, "Visible Region Highlight Color", colorComposite);		
-			
-		
-		// Set the editor up to use this page
-		colorEditor.setPreferencePage(this);
-		colorEditor.setPreferenceStore(getPreferenceStore());
-		colorEditor.load();
+        Composite colorComposite = new Composite(entryTable,SWT.NONE);
 
-		return entryTable;
-  }
-	
-	public Preferences() {
-		System.out.println("Preferences");
-		plugin = this;
-//		Color color = Display.getDefault().getSystemColor(DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
-//		PreferenceConverter.setDefault(plugin.getPreferenceStore(),  VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, color.getRGB());
-	}
+        colorComposite.setLayout(new GridLayout());
 
-	public static Preferences getDefault() {
-		System.out.println("getDefault");
-		return plugin;
-	}
+        // Create a data that takes up the extra space in the dialog.
+        colorComposite.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-//	/** 
-//	 * Initializes a preference store with default preference values 
-//	 * for this plug-in.
-//	 */
-//	protected void initializeDefaultPreferences(IPreferenceStore store) {
-//		System.out.println("initializeDefaultPreferences");
-////		store.setDefault(VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
-//		Color color = Display.getDefault().getSystemColor(DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
-//		PreferenceConverter.setDefault(store,  VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, color.getRGB());
-//	}
-	
-	@Override
-  protected void performDefaults() {
-    super.performDefaults();
-    System.out.println("performDefaults");
-    colorEditor.loadDefault();
-  }
+        colorEditor = new ColorFieldEditor(VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, "Visible Region Highlight Color", colorComposite);
 
-	@Override
-  public boolean performOk() {
-		System.out.println("performOk");
-		colorEditor.store();
-		return super.performOk();
-  }
-	
-	public static Color getVisibleRegionHighlightColor() {
-		return new Color(Display.getCurrent(), PreferenceConverter.getColor(plugin.getPreferenceStore(), VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE));
-	}
+
+        // Set the editor up to use this page
+        colorEditor.setPreferencePage(this);
+        colorEditor.setPreferenceStore(getPreferenceStore());
+        colorEditor.load();
+
+        return entryTable;
+    }
+
+    public Preferences() {
+        System.out.println("Preferences");
+        plugin = this;
+        //		Color color = Display.getDefault().getSystemColor(DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
+        //		PreferenceConverter.setDefault(plugin.getPreferenceStore(),  VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, color.getRGB());
+    }
+
+    public static Preferences getDefault() {
+        System.out.println("getDefault");
+        return plugin;
+    }
+
+    //	/**
+    //	 * Initializes a preference store with default preference values
+    //	 * for this plug-in.
+    //	 */
+    //	protected void initializeDefaultPreferences(IPreferenceStore store) {
+    //		System.out.println("initializeDefaultPreferences");
+    ////		store.setDefault(VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
+    //		Color color = Display.getDefault().getSystemColor(DEFAULT_VISIBLE_REGION_HIGHLIGHT_COLOR);
+    //		PreferenceConverter.setDefault(store,  VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE, color.getRGB());
+    //	}
+
+    @Override
+    protected void performDefaults() {
+        super.performDefaults();
+        System.out.println("performDefaults");
+        colorEditor.loadDefault();
+    }
+
+    @Override
+    public boolean performOk() {
+        System.out.println("performOk");
+        colorEditor.store();
+        return super.performOk();
+    }
+
+    public static Color getVisibleRegionHighlightColor() {
+        return new Color(Display.getCurrent(), PreferenceConverter.getColor(plugin.getPreferenceStore(), VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE));
+    }
+
 }
