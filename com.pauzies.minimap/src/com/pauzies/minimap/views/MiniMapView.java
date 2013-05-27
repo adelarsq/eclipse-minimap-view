@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.source.ISourceViewer;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BidiSegmentEvent;
@@ -31,6 +33,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.texteditor.AbstractTextEditor;
 
+import com.pauzies.minimap.preferences.Preferences;
+
 public class MiniMapView extends ViewPart {
 
 	public static final String ID = "com.pauzies.minimap.views.MiniMapView";
@@ -39,6 +43,7 @@ public class MiniMapView extends ViewPart {
 	private Color foregroundColor;
 	private Color selectionBackgroundColor;
 	private Color selectionForegroundColor;
+	private Color visibleRegionColor = new Color (Display.getCurrent(), 127, 127, 255);
 
 	private AbstractTextEditor selectedPart;
 	private MyTextEditor editor;
@@ -158,8 +163,9 @@ public class MiniMapView extends ViewPart {
 
 			foregroundColor = editor.getSourceViewer().getTextWidget().getForeground();
 			backgroundColor = editor.getSourceViewer().getTextWidget().getBackground();
-			selectionBackgroundColor = editor.getSourceViewer().getTextWidget().getSelectionBackground(); //TODO : should get another color than selected color
+			selectionBackgroundColor = editor.getSourceViewer().getTextWidget().getSelectionBackground();
 			selectionForegroundColor = editor.getSourceViewer().getTextWidget().getSelectionForeground();
+      if (null != Preferences.getVisibleRegionHighlightColor()) { visibleRegionColor = Preferences.getVisibleRegionHighlightColor(); }
 
 			minimap.setBackground(backgroundColor);
 			minimap.setForeground(foregroundColor);
@@ -176,6 +182,52 @@ public class MiniMapView extends ViewPart {
 			highlightVisibleRegion(minimap, editor);
 		}
 	};
+	
+//	IPropertyChangeListener preferenceListener = new IPropertyChangeListener() {
+////			/*
+////			 * @see IPropertyChangeListener.propertyChange()
+////			 */
+////			public void propertyChange(PropertyChangeEvent event) {
+////
+////				if (event
+////					.getProperty()
+////					.equals(BadWordCheckerPlugin.HIGHLIGHT_PREFERENCE)) {
+////					//Update the colors by clearing the current color,
+////					//updating the view and then disposing the old color.
+////					Color oldForeground = foreground;
+////					foreground = null;
+////					setBadWordHighlights(text.getText());
+////					oldForeground.dispose();
+////				}
+////				if (event
+////					.getProperty()
+////					.equals(BadWordCheckerPlugin.BAD_WORDS_PREFERENCE))
+////					//Only update the text if only the words have changed
+////					setBadWordHighlights(text.getText());
+////			}
+//
+//			@Override
+//      public void propertyChange(PropertyChangeEvent event) {
+//				System.out.println("propertyChange");
+//	      // TODO Auto-generated method stub
+//				if (event.getProperty().equals(Preferences.VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE)) {
+//					
+//					System.out.println("VISIBLE_REGION_HIGHLIGHT_COLOR_PREFERENCE changed");
+//					
+//					//Update the colors by clearing the current color,
+//					//updating the view and then disposing the old color.
+////					Color oldForeground = foreground;
+////					foreground = null;
+////					setBadWordHighlights(text.getText());
+////					oldForeground.dispose();
+//					
+////					event.getNewValue()
+//					
+////					visibleRegionColor = ??;
+//					// probably redraw
+//				}
+//      }
+//		};
 
 	// WorkbenchPart overrides //////////////////////////////////////////////////
 	@Override
@@ -195,6 +247,8 @@ public class MiniMapView extends ViewPart {
 		minimap.addSelectionListener(minimapSelectionListener);
 
 		getSite().getWorkbenchWindow().getSelectionService().addSelectionListener(editorSelectionListener);
+		
+//		Preferences.getDefault().getPreferenceStore().addPropertyChangeListener(preferenceListener);
 	}
 
 	@Override
@@ -219,7 +273,7 @@ public class MiniMapView extends ViewPart {
 		minimap.setStyleRanges(editor.getSourceViewer().getTextWidget().getStyleRanges());
 	}
 
-	// NOTE : this works
+	// NOTE : this works EXCEPT when code is folded because the minimap matches the contents (foldedness) but uses the line numbers visible to hihglight
 	private void highlightVisibleRegion(StyledText minimap, MyTextEditor editor) {
 		System.out.print("highlightVisibleRegion ");
 		int startLine = editor.getSourceViewer().getTopIndex();
@@ -227,8 +281,7 @@ public class MiniMapView extends ViewPart {
     // reset background color for whole document
 		minimap.setLineBackground(0, minimap.getLineCount() - 1, backgroundColor);
 		// set visible area colour
-		minimap.setLineBackground(startLine, endLine - startLine + 1, selectionBackgroundColor);
-		
+		minimap.setLineBackground(startLine, endLine - startLine + 1, visibleRegionColor);
 		System.out.println("from line# " + startLine + " to line# " + endLine);
 	}
 
