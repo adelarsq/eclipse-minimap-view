@@ -72,18 +72,19 @@ public class MiniMapView extends ViewPart {
         }
     }
 
-    // listeners ////////////////////////////////////////////////////////////////
+    //--------------------------------------------------------------------------
+    // Listeners
+    //--------------------------------------------------------------------------
+
     private final MouseListener minimapMouseListener = new MouseAdapter() {
         @Override
         public void mouseDown(MouseEvent e) {
-            //			System.out.println("mouseDown");
             changeEditor(e);
             mouseIsDown = true;
         }
 
         @Override
         public void mouseUp(MouseEvent e) {
-            //			System.out.println("mouseUp");
             changeEditor(e);
             mouseIsDown = false;
         }
@@ -92,7 +93,6 @@ public class MiniMapView extends ViewPart {
     private final MouseMoveListener minimapMouseMoveListener = new MouseMoveListener() {
         @Override
         public void mouseMove(MouseEvent e) {
-            //		System.out.println("mouseMove");
             if (mouseIsDown) {
                 changeEditor(e);
             }
@@ -316,3 +316,4 @@ public class MiniMapView extends ViewPart {
         });
     }
 }
+

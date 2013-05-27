@@ -14,7 +14,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
-//public class Preferences extends AbstractUIPlugin {
 public class Preferences extends PreferencePage implements IWorkbenchPreferencePage {
 
     private static Preferences	plugin;
